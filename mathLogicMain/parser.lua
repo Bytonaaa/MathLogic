@@ -30,9 +30,9 @@ local function get_next_lexem()
     return nil, lexem_types.lend
   end
 
-  char_at = string.byte(expr, index)
+  local char_at = string.byte(expr, index)
   if (char_at - string.byte('A') >= 0 and char_at - string.byte('A') <= 32) then
-    m = string.match(expr, pattern, index)
+    local m = string.match(expr, pattern, index)
     index = index + #m
     return m, lexem_types.lvariable
   end
@@ -40,7 +40,7 @@ local function get_next_lexem()
 
   if (switcher[string.char(char_at)]) then
     
-    str, lex = switcher[string.char(char_at)]()
+    local str, lex = switcher[string.char(char_at)]()
     if (str ~=nil) then
       index = index + #str
     end
@@ -52,28 +52,31 @@ end
 
 local function expressionBalance  (stack_var, stack_op) 
   while (#stack_op ~= 0) do
-            local operation = table.remove(stack_op)
-            if (operation.operation ~= 3) then
-                secondVariable = table.remove(stack_var)
-                firstVariable = table.remove(stack_var)
-                table.insert(stack_var, nodes:new(operation.operation, firstVariable, secondVariable));
-            else 
-                firstVariable = table.remove(stack_var)
-                table.insert(stack_var, nodes:new(operation.operation, firstVariable, nil));
-            end
-        end
-
-return table.remove(stack_var);
+    local operation = table.remove(stack_op)
+    local secondVariable
+    local firstVariable = table.remove(stack_var)
+    if (operation.operation ~= 3) then
+      secondVariable, firstVariable = firstVariable, table.remove(stack_var)
+    end
+    table.insert(stack_var, nodes:new(operation.operation, firstVariable, secondVariable));
+  end
+  return table.remove(stack_var);
 end
 
 
 local switcher_lexem = { 
-  [lexem_types.lopen] = function (stack_var, stack_op, cur_lex) table.insert(stack_var, parser()) end,
-  [lexem_types.lclose] = function (stack_var, stack_op, cur_lex) return expressionBalance(stack_var, stack_op) end,
-  [lexem_types.lend] = function (stack_var, stack_op, cur_lex) if (#stack_op ~=0) then return expressionBalance(stack_var, stack_op) else return stack_var[1] end end,
+  [lexem_types.lopen] = function (stack_var) table.insert(stack_var, parser()) end,
+  [lexem_types.lclose] = function (stack_var, stack_op) return expressionBalance(stack_var, stack_op) end,
+  [lexem_types.lend] = function (stack_var, stack_op) 
+    if (#stack_op ~=0) then 
+      return expressionBalance(stack_var, stack_op) 
+    else 
+      return stack_var[1] 
+    end 
+  end,
   [lexem_types.lvariable] = function (stack_var, stack_op, cur_lex) table.insert(stack_var, nodes:new(nil, nil, nil, cur_lex)) end,
-  [lexem_types.lnot] = function(stack_var, stack_op) table.insert(stack_op, nodes:new(3, nil, nil, nil)) end,
-  [lexem_types.land] = function(stack_var, stack_op, cur_lex)
+  [lexem_types.lnot] = function(stack_var, stack_op) table.insert(stack_op, nodes:new(3)) end,
+  [lexem_types.land] = function(stack_var, stack_op)
     if (#stack_op~=0 and stack_op[1].operation >= 2) then
       while (#stack_op~=0 and stack_op[1].operation == 3) do
         local operation = table.remove(stack_op)
@@ -96,7 +99,7 @@ local switcher_lexem = {
   end,
   
   
-  [lexem_types.lor] = function(stack_var, stack_op, cur_lex)
+  [lexem_types.lor] = function(stack_var, stack_op)
       while (#stack_op~=0 and stack_op[1].operation == 3) do
         local operation = table.remove(stack_op)
         local firstVariable = table.remove(stack_var)
@@ -118,7 +121,7 @@ local switcher_lexem = {
   end,
   
   
-  [lexem_types.limpl] = function(stack_var, stack_op, cur_lex)
+  [lexem_types.limpl] = function(stack_var, stack_op)
     while (#stack_op~=0 and stack_op[1].operation == 3) do
         local operation = table.remove(stack_op)
         local firstVariable = table.remove(stack_var)

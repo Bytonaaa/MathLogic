@@ -13,11 +13,11 @@ local all_hypoth_trees = { }
 local all_expressions = { }
 
 local function build_trees()
-  for i, val in ipairs(axioms) do
+  for _, val in ipairs(axioms) do
     table.insert(all_axiom_trees, parser(val))
   end
   
-  for i, val in ipairs(hypothnes) do
+  for _, val in ipairs(hypothnes) do
     table.insert(all_hypoth_trees, parser(val))
   end
 end
@@ -33,7 +33,7 @@ end
 
 local function readHypot(reader)
   local str = reader:read()
-  for w in string.match(str, "[^,\\|\\-]*") do
+  for w in string.gmatch(str, "([^,] | ^(|-))*") do
     table.insert(hypothnes, w)
   end
   table.remove(hypothnes)
@@ -41,7 +41,7 @@ end
 
 local function check_on_axiom(tree) 
   local num = 1
-  for key, val in ipairs(all_axiom_trees) do
+  for _, val in ipairs(all_axiom_trees) do
     if (check_axiom(val, tree)) then
       return num
     end
@@ -52,7 +52,7 @@ end
 
 local function check_on_hyp(tree)
   local num = 1 
-  for key, val in ipairs(all_hypoth_trees) do
+  for _, val in ipairs(all_hypoth_trees) do
     if (check_hypoth(val, tree)) then
       return num
     end
@@ -75,7 +75,7 @@ local function workingWithTrees(tree, num)
 end
 
 
-local function main(arg)
+local function main()
 
   local file_in = io.input("tasks")
   local file_out = io.output("ans")
@@ -85,7 +85,7 @@ local function main(arg)
   
   local number = 0
   
-  for key, val in ipairs(all_expressions) do
+  for _, val in ipairs(all_expressions) do
     local is_proof = false 
     number = number + 1
     local tree_expr = parser(val)
@@ -103,9 +103,9 @@ local function main(arg)
         is_proof = true
       elseif (all_right_impl[tree_expr:string()]) then
         local temp = all_right_impl[tree_expr:string()]
-        for keyz, inte in ipairs(temp) do
+        for _, inte in ipairs(temp) do
           local bool = false
-          for keyzz, ex in ipairs(all_tree_to_expr) do 
+          for _, ex in ipairs(all_tree_to_expr) do 
             if (ex:equal(all_tree_to_expr[inte].left_node)) then
               bool = true
               break
@@ -124,7 +124,6 @@ local function main(arg)
     
     if (not is_proof) then
       file_out:write('(' .. number .. ') ' .. val .. ' ( не доказано )\n')
-      return
     end
   end
   

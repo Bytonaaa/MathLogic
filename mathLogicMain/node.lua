@@ -3,7 +3,11 @@ local node_meta = { }
 node_meta.__index = node_meta
 
   function hash_str (str) 
-    hash = 0
+    
+    if #str == 0 then 
+      return 0
+    end
+    local hash = 0
     for i = 1, #str do
       hash = (hash*51 + string.byte(str, i)*101) % 1000000007
     end
@@ -23,12 +27,17 @@ node_meta.__index = node_meta
     local str_right = ""
     local str_var = ""
     
+    local left_hash_eq = 0
+    local right_hash_eq = 0
+    
     if (left_node) then
       str_left = left_node.hash
+      left_hash_eq = left_node.hash_eq
     end
     
     if (right_node) then
       str_right = right_node.hash
+      right_hash_eq = right_node.hash_eq
     end
     
     if (variable) then
@@ -36,7 +45,7 @@ node_meta.__index = node_meta
     end
     
     obj.hash = str_left .. str_var .. str_right
-    obj.hash_eq = hash_str(obj.hash)
+    obj.hash_eq = 3 + 7 * hash_str(str_var) + 53 * left_hash_eq + 751 * right_hash_eq
     setmetatable(obj, node_meta)
     return obj
   end
@@ -71,10 +80,7 @@ node_meta.__index = node_meta
   end
 
   function node_meta:hash_equal()
-    if (not self.hash_eq) then
-      self.hash_eq = hash_str(self.hash)
-    end
-    return self.hash_eq
+    return self.hash_eq or 1
   end
   
   function node_meta:string() 

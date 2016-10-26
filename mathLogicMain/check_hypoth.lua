@@ -1,4 +1,4 @@
-return  function (tree_hyp, tree_expr)
+local function check (tree_hyp, tree_expr)
   
   if (tree_hyp.operation == -1) then
     return tree_hyp.variable == tree_expr.variable
@@ -11,3 +11,5 @@ return  function (tree_hyp, tree_expr)
   
   return false
 end
+
+return check
