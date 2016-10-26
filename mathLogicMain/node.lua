@@ -2,6 +2,15 @@ local node_table = { }
 local node_meta = { }
 node_meta.__index = node_meta
 
+  function hash_str (str) 
+    hash = 0
+    for i = 1, #str do
+      hash = (hash*51 + string.byte(str, i)*101) % 1000000007
+    end
+    return hash % 1000000007
+  end
+  
+  
   function node_table:new (operation, left_node, right_node, variable) 
     
     local obj = { }
@@ -10,59 +19,42 @@ node_meta.__index = node_meta
     obj.operation = operation or -1
     obj.variable = variable or ""
     
+    local str_left = ""
+    local str_right = ""
+    local str_var = ""
+    
+    if (left_node) then
+      str_left = left_node.hash
+    end
+    
+    if (right_node) then
+      str_right = right_node.hash
+    end
+    
+    if (variable) then
+      str_var = variable
+    end
+    
+    obj.hash = str_left .. str_var .. str_right
+    obj.hash_eq = hash_str(obj.hash)
     setmetatable(obj, node_meta)
     return obj
   end
 
 
-  function node_meta:similar(node)
-    
-    
-    if (self.operation ~= node.operation) then
-      return false
-    end
-    
-    if (self.operation == -1) then
-      
-      if (self.variable == node.variable) then
-        return true
-      else
-        return false
-      end
-    elseif (self.operation == 3) then
-      return self.left_node:similar(node.left_node)
-    else
-      local left_bool = self.left_node:similar(node.left_node)
-      local right_bool = self.right_node:similar(node.right_node)
-      return left_bool and right_bool
-    end
-
-  end
-
   function node_meta:equal(node)
-    if (node == nil or self.operation ~= node.operation or self.variable ~= node.variable) then
+    if (self.operation ~= node.operation or self:hash_equal() ~= node:hash_equal()) then
       return false
     end
-    
-    local left_b = false
-    local right_b = false
-    
-    if (self.left_node ~= nil) then
-      left_b = self.left_node:equal(node.left_node)
+    if (self.operation == -1) then
+      return self.variable == node.variable
     else
-      left_b = not node.left_node
+      return self.left_node:equal(node.left_node) and (self.operation == 3 or self.right_node:equal(node.right_node))
     end
-    
-    if (self.right_node ~= nil) then
 
-      right_b = self.right_node:equal(node.right_node)
-    else
-      right_b = not node.right_node
-    end
-    
-    return left_b and right_b
   end
-  
+
+
   function node_meta:output() 
     print("operation: "..self.operation.." variable: ".. self.variable)
     if (self.left_node) then
@@ -78,17 +70,15 @@ node_meta.__index = node_meta
     end    
   end
 
-  function node_meta:string() 
-    local s = "operation"..self.operation.."variable:".. self.variable
-    if (self.left_node) then
-
-      s = s  .. self.left_node:string()
+  function node_meta:hash_equal()
+    if (not self.hash_eq) then
+      self.hash_eq = hash_str(self.hash)
     end
-    
-    if (self.right_node) then
-      s = s ..self.right_node:string()
-    end    
-    return s
+    return self.hash_eq
+  end
+  
+  function node_meta:string() 
+    return self.hash
   end
 
 return node_table

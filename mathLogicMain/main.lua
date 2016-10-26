@@ -24,16 +24,23 @@ end
 
 
 local function readExpression(reader)
-  str = reader:read()
+  local str = reader:read()
   while (str ~= nil) do
     table.insert(all_expressions, str)
     str = reader:read()
   end
 end
 
+local function readHypot(reader)
+  local str = reader:read()
+  for w in string.match(str, "[^,\\|\\-]*") do
+    table.insert(hypothnes, w)
+  end
+  table.remove(hypothnes)
+end
 
 local function check_on_axiom(tree) 
-  num = 1
+  local num = 1
   for key, val in ipairs(all_axiom_trees) do
     if (check_axiom(val, tree)) then
       return num
@@ -44,7 +51,14 @@ local function check_on_axiom(tree)
 end
 
 local function check_on_hyp(tree)
-  
+  local num = 1 
+  for key, val in ipairs(all_hypoth_trees) do
+    if (check_hypoth(val, tree)) then
+      return num
+    end
+    num = num + 1
+  end
+  return -1
 end
 
 local function workingWithTrees(tree, num)
@@ -54,7 +68,7 @@ local function workingWithTrees(tree, num)
     if (all_right_impl[tree.right_node:string()]) then
       table.insert(all_right_impl[tree.right_node:string()], num)
     else
-    temp = { num }
+    local temp = { num }
     all_right_impl[tree.right_node:string()] = temp
     end
   end
@@ -63,41 +77,43 @@ end
 
 local function main(arg)
 
-  file_in = io.input("tasks")
-  file_out = io.output("ans")
+  local file_in = io.input("tasks")
+  local file_out = io.output("ans")
   readExpression(file_in)
   
   build_trees()
   
-  number = 0
+  local number = 0
   
   for key, val in ipairs(all_expressions) do
-    is_proof = false 
+    local is_proof = false 
     number = number + 1
-    tree_expr = parser(val)
-    num_ax = check_on_axiom(tree_expr)
+    local tree_expr = parser(val)
+    local num_ax = check_on_axiom(tree_expr)
     
     if (num_ax ~= -1) then
       workingWithTrees(tree_expr, number)
       file_out:write('(' .. number .. ')' .. val .. '(Сх. акс. ' .. num_ax .. ')\n')
       is_proof = true
     else 
-
-      if (all_right_impl[tree_expr:string()]) then
-        temp = all_right_impl[tree_expr:string()]
+      local num_hyp = check_on_hyp(tree_expr)
+      if (num_hyp ~= -1) then
+        workingWithTrees(tree_expr, number)
+        file_out:write('(' .. number .. ')' .. val .. '(Предп. ' .. num_hyp .. ')\n')
+        is_proof = true
+      elseif (all_right_impl[tree_expr:string()]) then
+        local temp = all_right_impl[tree_expr:string()]
         for keyz, inte in ipairs(temp) do
-          bool = false
+          local bool = false
           for keyzz, ex in ipairs(all_tree_to_expr) do 
             if (ex:equal(all_tree_to_expr[inte].left_node)) then
               bool = true
               break
             end
           end
-          
-          
+      
           if (bool) then
             workingWithTrees(tree_expr, number)
-            print("number: " .. number .. " value: ".. val)
             file_out:write('('..number..')'..val .. ' (M. P. ' .. all_tree_by_expr[all_tree_to_expr[inte].left_node:string()] .. ', ' ..  inte .. ')\n')
             is_proof = true
             break
@@ -107,13 +123,15 @@ local function main(arg)
     end
     
     if (not is_proof) then
-      file_out:write('(' .. number .. ') ' .. val .. ' ( не доказано )')
+      file_out:write('(' .. number .. ') ' .. val .. ' ( не доказано )\n')
       return
     end
   end
   
-  file_in.close()
-  file_out.close()
+  file_in:close()
+  file_out:close()
+  
+  print ("Program was worked " .. os.clock() .. " s")
 end
 
 
