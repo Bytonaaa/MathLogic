@@ -44,7 +44,7 @@ node_meta.__index = node_meta
       str_var = variable
     end
     
-    obj.hash = str_left .. str_var .. str_right
+    obj.hash = str_left .. str_var .. tostring(obj.operation) .. str_right
     obj.hash_eq = 3 + 7 * hash_str(str_var) + 53 * left_hash_eq + 751 * right_hash_eq
     setmetatable(obj, node_meta)
     return obj
@@ -60,9 +60,18 @@ node_meta.__index = node_meta
     else
       return self.left_node:equal(node.left_node) and (self.operation == 3 or self.right_node:equal(node.right_node))
     end
-
   end
 
+  function node_meta:equal_val(node)
+    if (self.operation ~= node.operation or self:hash_equal() ~= node:hash_equal()) then
+      return false
+    end
+    if (self.operation == -1) then
+      return self.variable == node.variable
+    else
+      return self.left_node:equal(node.left_node) and (self.operation == 3 or self.right_node:equal(node.right_node))
+    end
+  end
 
   function node_meta:output() 
     print("operation: "..self.operation.." variable: ".. self.variable)

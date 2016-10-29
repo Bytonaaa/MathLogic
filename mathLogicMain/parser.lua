@@ -10,7 +10,7 @@ local lexem_types = {
   limpl = 7
 }
 local index = 1;
-local pattern = "%a*"
+local pattern = "[a-zA-Z][a-zA-Z0-9]*"
 local expr = ""
 local parser
 
@@ -30,7 +30,7 @@ local function get_next_lexem()
     return nil, lexem_types.lend
   end
 
-  local char_at = string.byte(expr, index)
+  local char_at = string.byte(expr, index) 
   if (char_at - string.byte('A') >= 0 and char_at - string.byte('A') <= 32) then
     local m = string.match(expr, pattern, index)
     index = index + #m
@@ -153,7 +153,6 @@ parser = function ()
   while (true) do
     
     local str, lexem = get_next_lexem()
-    
     local data = switcher_lexem[lexem](stack_var, stack_op, str)
     
     if (data ~= nil) then

@@ -33,8 +33,10 @@ end
 
 local function readHypot(reader)
   local str = reader:read()
-  for w in string.gmatch(str, "([^,] | ^(|-))*") do
-    table.insert(hypothnes, w)
+  for w in string.gmatch(str, "[^,|]*") do
+    if w and w ~= "" then 
+      table.insert(hypothnes, w)
+    end
   end
   table.remove(hypothnes)
 end
@@ -62,7 +64,7 @@ local function check_on_hyp(tree)
 end
 
 local function workingWithTrees(tree, num)
-  all_tree_to_expr[num] = tree
+  table.insert(all_tree_to_expr, num, tree)
   all_tree_by_expr[tree:string()] = num
   if (tree.operation == 0) then
     if (all_right_impl[tree.right_node:string()]) then
@@ -79,8 +81,8 @@ local function main()
 
   local file_in = io.input("tasks")
   local file_out = io.output("ans")
+  --readHypot(file_in)
   readExpression(file_in)
-  
   build_trees()
   
   local number = 0
@@ -105,7 +107,7 @@ local function main()
         local temp = all_right_impl[tree_expr:string()]
         for _, inte in ipairs(temp) do
           local bool = false
-          for _, ex in ipairs(all_tree_to_expr) do 
+          for _, ex in pairs(all_tree_to_expr) do 
             if (ex:equal(all_tree_to_expr[inte].left_node)) then
               bool = true
               break
@@ -114,7 +116,7 @@ local function main()
       
           if (bool) then
             workingWithTrees(tree_expr, number)
-            file_out:write('('..number..')'..val .. ' (M. P. ' .. all_tree_by_expr[all_tree_to_expr[inte].left_node:string()] .. ', ' ..  inte .. ')\n')
+            file_out:write('('..number..')'..val .. '(M. P. ' .. all_tree_by_expr[all_tree_to_expr[inte].left_node:string()] .. ', ' ..  inte .. ')\n')
             is_proof = true
             break
           end
@@ -123,7 +125,7 @@ local function main()
     end
     
     if (not is_proof) then
-      file_out:write('(' .. number .. ') ' .. val .. ' ( не доказано )\n')
+      file_out:write('(' .. number .. ') ' .. val .. '(не доказано)\n')
     end
   end
   
